@@ -39,6 +39,11 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Role role;
 
+
+
+
+    
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
