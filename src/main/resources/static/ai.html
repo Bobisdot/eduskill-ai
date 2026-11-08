@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EduSkill AI — Ұсыным</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="shell">
+    <aside class="sidebar">
+        <div class="brand"><span class="dot"></span><span>EduSkill AI</span></div>
+        <nav class="nav">
+            <a href="dashboard.html">Басты бет</a>
+            <a href="profile.html">Профиль</a>
+            <a href="projects.html">Жобалар</a>
+            <a href="courses.html">Курстар</a>
+            <a href="ai.html">AI ұсыным</a>
+        </nav>
+        <div class="logout"><button class="btn btn-ghost btn-block" onclick="logout()">Шығу</button></div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <h1>AI курс ұсынымы</h1>
+            <span class="who" id="who"></span>
+        </div>
+
+        <div class="card">
+            <p class="muted">Профиліңіздегі дағдылар негізінде жекелендірілген оқу жоспары мен курс ұсыныстарын алыңыз.</p>
+            <button class="btn btn-primary" id="getBtn">Ұсыныс алу</button>
+        </div>
+
+        <div id="alert" class="alert" style="display:none"></div>
+        <div id="result" class="card" style="display:none"></div>
+    </main>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+    requireAuth();
+    highlightNav();
+    document.getElementById("who").textContent = currentEmail();
+    const alertEl = document.getElementById("alert");
+    const resultEl = document.getElementById("result");
+    const btn = document.getElementById("getBtn");
+
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Жасалуда…';
+      hideAlert(alertEl);
+      resultEl.style.display = "none";
+      try {
+        const text = await apiFetch("/api/v1/ai/recommend-courses");
+        resultEl.innerHTML = `<div class="ai-response"></div>`;
+        resultEl.querySelector(".ai-response").textContent = text;
+        resultEl.style.display = "block";
+      } catch (err) {
+        showError(alertEl, err.message || "AI қазір қолжетімсіз. Сәл кейінірек қайталап көріңіз.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Ұсыныс алу";
+      }
+    });
+</script>
+</body>
+</html>

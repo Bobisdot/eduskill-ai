@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EduSkill AI — Курстар</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="shell">
+    <aside class="sidebar">
+        <div class="brand"><span class="dot"></span><span>EduSkill AI</span></div>
+        <nav class="nav">
+            <a href="dashboard.html">Басты бет</a>
+            <a href="profile.html">Профиль</a>
+            <a href="projects.html">Жобалар</a>
+            <a href="courses.html">Курстар</a>
+            <a href="ai.html">AI ұсыным</a>
+        </nav>
+        <div class="logout"><button class="btn btn-ghost btn-block" onclick="logout()">Шығу</button></div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <h1>Курстар</h1>
+            <span class="who" id="who"></span>
+        </div>
+
+        <div id="alert" class="alert" style="display:none"></div>
+        <div id="list"></div>
+    </main>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+    requireAuth();
+    highlightNav();
+    document.getElementById("who").textContent = currentEmail();
+    const alertEl = document.getElementById("alert");
+    const listEl = document.getElementById("list");
+
+    (async () => {
+      try {
+        const courses = await apiFetch("/api/v1/courses");
+        if (courses.length === 0) {
+          listEl.innerHTML = '<div class="empty">Әзірге курс қосылмаған.</div>';
+          return;
+        }
+        listEl.innerHTML = courses.map(c => `
+          <div class="card">
+            <h3>${c.title}</h3>
+            <p class="muted">${c.description || ""}</p>
+            ${c.instructor ? `<span class="chip">Оқытушы: ${c.instructor.firstName || ""} ${c.instructor.lastName || ""}</span>` : ""}
+          </div>
+        `).join("");
+      } catch (err) {
+        showError(alertEl, err.message || "Курстарды жүктеу кезінде қате шықты");
+      }
+    })();
+</script>
+</body>
+</html>

@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import java.util.List; // Импорттауды ұмытпаңыз
+import java.util.List;
 
 import java.util.List;
 
@@ -43,5 +43,11 @@ public class StudentProfileController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         return ResponseEntity.ok(profileService.getStudentsLookingForTeam(userDetails.getUsername()));
+    }
+    // StudentProfileController.java ішіне қосыңыз:
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<StudentProfile> getProfileByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(profileService.getProfileByUserId(userId));
     }
 }

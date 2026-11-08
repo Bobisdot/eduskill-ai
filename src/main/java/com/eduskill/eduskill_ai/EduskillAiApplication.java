@@ -9,5 +9,4 @@ public class EduskillAiApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(EduskillAiApplication.class, args);
 	}
-
 }

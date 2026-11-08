@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/projects")
@@ -24,25 +25,21 @@ public class ProjectController {
     private final ProjectRepository projectRepository;
     private final ProjectApplicationRepository applicationRepository;
 
-    // 1. Жаңа проект/стажировка жариялау
     @PostMapping
     public ResponseEntity<Project> createProject(@RequestBody ProjectRequest request, Authentication authentication) {
         return ResponseEntity.ok(projectService.createProject(request, authentication.getName()));
     }
 
-    // 2. Барлық проекттер тізімін алу
     @GetMapping
     public ResponseEntity<List<Project>> getAllProjects() {
         return ResponseEntity.ok(projectService.getAllProjects());
     }
 
-    // 3. Түріне қарай сүзгілеп алу ( /api/v1/projects/type/INTERNSHIP )
     @GetMapping("/type/{type}")
     public ResponseEntity<List<Project>> getProjectsByType(@PathVariable String type) {
         return ResponseEntity.ok(projectService.getProjectsByType(type));
     }
 
-    // 4. Студенттің стажировкаға/проектке өтінім жіберуі
     @PostMapping("/{projectId}/apply")
     public ResponseEntity<?> applyForProject(
             @PathVariable Long projectId,
@@ -55,7 +52,7 @@ public class ProjectController {
                 .orElseThrow(() -> new RuntimeException("Проект табылмады!"));
 
         if (applicationRepository.existsByProjectIdAndApplicantId(projectId, student.getId())) {
-            return ResponseEntity.badRequest().body("Сіз бұл стажировкаға өтінім беріп қойғансыз!");
+            return ResponseEntity.badRequest().body("Сіз бұл проектке өтінім беріп қойғансыз!");
         }
 
         String coverLetter = (request != null && request.containsKey("coverLetter"))
@@ -72,16 +69,59 @@ public class ProjectController {
 
         return ResponseEntity.ok("Өтінім сәтті жіберілді!");
     }
-    // 1. Компания өкілі өз стажировкасына түскен өтінімдерді көреді
+
     @GetMapping("/{projectId}/applications")
     public ResponseEntity<List<ProjectApplication>> getApplicationsForProject(@PathVariable Long projectId) {
         return ResponseEntity.ok(applicationRepository.findByProjectId(projectId));
     }
 
-    // 2. Студент өзі берген өтінімдерді көреді
     @GetMapping("/my-applications")
     public ResponseEntity<List<ProjectApplication>> getMyApplications(Authentication authentication) {
         User student = (User) authentication.getPrincipal();
         return ResponseEntity.ok(applicationRepository.findByApplicantId(student.getId()));
+    }
+
+    @PostMapping("/applications/{applicationId}/status")
+    public ResponseEntity<?> updateApplicationStatus(
+            @PathVariable Long applicationId,
+            @RequestParam String status,
+            Authentication authentication) {
+
+        ProjectApplication application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Өтінім табылмады!"));
+
+        User currentUser = (User) authentication.getPrincipal();
+
+        if (!application.getProject().getOwner().getId().equals(currentUser.getId())) {
+            return ResponseEntity.badRequest().body("Сізде бұл өтінімнің мәртебесін өзгертуге рұқсат жоқ!");
+        }
+
+        application.setStatus(status);
+        applicationRepository.save(application);
+
+        return ResponseEntity.ok("Өтінім мәртебесі жаңартылды: " + status);
+    }
+
+    // 8. Өзі жасаған жобалар тізімі (Автор)
+    @GetMapping("/my-created")
+    public ResponseEntity<List<Project>> getMyCreatedProjects(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        return ResponseEntity.ok(projectRepository.findAll().stream()
+                .filter(p -> p.getOwner() != null && p.getOwner().getId().equals(user.getId()))
+                .collect(Collectors.toList()));
+    }
+
+    // 9. Өтінімі ҚАБЫЛДАНҒАН (ACCEPTED) Жобалар тізімі (Портфолио/Команда мүшесі)
+    @GetMapping("/my-accepted")
+    public ResponseEntity<List<Project>> getMyAcceptedProjects(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        List<ProjectApplication> myApps = applicationRepository.findByApplicantId(user.getId());
+
+        List<Project> acceptedProjects = myApps.stream()
+                .filter(app -> "ACCEPTED".equalsIgnoreCase(app.getStatus()))
+                .map(ProjectApplication::getProject)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(acceptedProjects);
     }
 }

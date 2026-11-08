@@ -1,10 +1,12 @@
 package com.eduskill.eduskill_ai.security;
 
+import com.eduskill.eduskill_ai.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -13,11 +15,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class JwtService {
 
-    // Бұл біздің құпия кілтіміз (Secret Key). Токенді осы арқылы жасаймыз.
     private static final String SECRET_KEY = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
 
     public String extractUsername(String token) {
@@ -29,8 +31,22 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
+    // Токен генерацияләгәндә рольләрне (authorities яки role) өстибез:
     public String generateToken(UserDetails userDetails) {
-        return generateToken(new HashMap<>(), userDetails);
+        Map<String, Object> extraClaims = new HashMap<>();
+
+        // 1. Spring Security authorities аша рольне өстәү (мәсәлән: "ROLE_COMPANY" яки "ROLE_STUDENT")
+        var authorities = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+        extraClaims.put("authorities", authorities);
+
+        // 2. Яки капланган User объекты аша турыдан-туры роль исемен язу:
+        if (userDetails instanceof User user) {
+            extraClaims.put("role", user.getRole().name());
+        }
+
+        return generateToken(extraClaims, userDetails);
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
@@ -38,7 +54,7 @@ public class JwtService {
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // Токен 24 сағат жарамды
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 сәгать
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

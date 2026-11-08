@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EduSkill AI — Менің профилім</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .badge-accepted { background: #dcfce7; color: #15803d; font-weight: 700; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; }
+        .badge-author { background: #e0e7ff; color: #4338ca; font-weight: 700; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; }
+        .project-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+<div class="shell">
+    <aside class="sidebar">
+        <div class="brand"><span class="dot"></span><span>EduSkill AI</span></div>
+        <nav class="nav">
+            <a href="dashboard.html">Басты бет</a>
+            <a href="profile.html">Профиль</a>
+            <a href="projects.html">Жобалар</a>
+            <a href="courses.html">Курстар</a>
+            <a href="ai.html">AI ұсыным</a>
+        </nav>
+        <div class="logout"><button class="btn btn-ghost btn-block" onclick="logout()">Шығу</button></div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <h1>Менің профилім</h1>
+            <span class="who" id="who"></span>
+        </div>
+
+        <div id="alert" class="alert" style="display:none"></div>
+
+        <!-- ПРОФИЛЬ ФОРМАСЫ -->
+        <div class="card">
+            <h3>Профиль деректері</h3>
+            <form id="profileForm" style="margin-top:14px">
+                <div class="row">
+                    <div class="field">
+                        <label class="label">Университет</label>
+                        <input class="input" id="university" placeholder="The International IT University (IITU)">
+                    </div>
+                    <div class="field">
+                        <label class="label">Мамандық</label>
+                        <input class="input" id="major" placeholder="Java Backend Developer">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Дағдылар (үтірмен бөліп жазыңыз)</label>
+                    <input class="input" id="skills" placeholder="Java, Docker, Spring Boot">
+                </div>
+
+                <div class="row">
+                    <div class="field">
+                        <label class="label">GitHub</label>
+                        <input class="input" id="githubUrl" placeholder="https://github.com/username">
+                    </div>
+                    <div class="field">
+                        <label class="label">LeetCode</label>
+                        <input class="input" id="leetcodeUrl" placeholder="https://leetcode.com/username">
+                    </div>
+                    <div class="field">
+                        <label class="label">Codeforces</label>
+                        <input class="input" id="codeforcesUrl" placeholder="https://codeforces.com/profile/username">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="label">Басқа сілтемелер</label>
+                    <input class="input" id="otherLinks" placeholder="Портфолио немесе Telegram сілтемесі">
+                </div>
+
+                <div class="field">
+                    <label class="label">Өзің туралы</label>
+                    <textarea class="input" id="bio" rows="3"></textarea>
+                </div>
+
+                <div class="field" style="margin-top: 12px; margin-bottom: 20px;">
+                    <label style="cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="isLookingForTeam" style="width: 18px; height: 18px;">
+                         Команда / Коллаборация іздеп жүрмін
+                    </label>
+                </div>
+
+                <button class="btn btn-primary" type="submit" id="saveBtn">Сақтау</button>
+            </form>
+        </div>
+
+        <!-- МЕНІҢ ЖОБАЛАРЫМ & КОМАНДАМ (ПОРТФОЛИО БӨЛІМІ) -->
+        <div class="card" style="margin-top: 24px;">
+            <h3> Менің жобаларым мен Командаларым</h3>
+
+            <div style="margin-top: 16px;">
+                <h4 style="color:#4f46e5; font-size:1rem"> Өзім бастаған / жасаған жобалар:</h4>
+                <div id="createdProjectsList" style="margin-bottom:20px;">
+                    <div class="muted">Жүктелуде...</div>
+                </div>
+
+                <h4 style="color:#16a34a; font-size:1rem; margin-top:16px;"> Қабылданған / Қатысып жатқан жобаларым (Команда мүшесі):</h4>
+                <div id="acceptedProjectsList">
+                    <div class="muted">Жүктелуде...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+    requireAuth();
+    highlightNav();
+    document.getElementById("who").textContent = currentEmail();
+    const alertEl = document.getElementById("alert");
+
+    // Профиль деректерін бэкендтен алу
+    (async () => {
+      try {
+        const p = await apiFetch("/api/v1/profile/me");
+        if (p) {
+          document.getElementById("university").value = p.university || "";
+          document.getElementById("major").value = p.major || "";
+          document.getElementById("skills").value = p.skills || "";
+          document.getElementById("githubUrl").value = p.githubUrl || "";
+          document.getElementById("leetcodeUrl").value = p.leetcodeUrl || "";
+          document.getElementById("codeforcesUrl").value = p.codeforcesUrl || "";
+          document.getElementById("otherLinks").value = p.otherLinks || "";
+          document.getElementById("bio").value = p.bio || "";
+          document.getElementById("isLookingForTeam").checked = !!p.isLookingForTeam;
+        }
+      } catch (err) {}
+
+      // Өзі жасаған жобаларды жүктеу
+      try {
+        const created = await apiFetch("/api/v1/projects/my-created");
+        const createdEl = document.getElementById("createdProjectsList");
+        if (created && created.length > 0) {
+          createdEl.innerHTML = created.map(p => `
+            <div class="project-item">
+              <div style="display:flex; justify-content:space-between; align-items:center">
+                <strong>${p.title}</strong>
+                <span class="badge-author">Автор</span>
+              </div>
+              <div class="muted" style="font-size:0.85rem; margin-top:4px">${p.description}</div>
+              <div style="font-size:0.8rem; margin-top:6px; font-weight:600">Стек: ${p.requiredSkills || 'Жоқ'}</div>
+            </div>
+          `).join('');
+        } else {
+          createdEl.innerHTML = '<div class="muted" style="font-size:0.85rem">Сіз әлі ешқандай жоба жарияламадыңыз.</div>';
+        }
+      } catch(e) {
+        document.getElementById("createdProjectsList").innerHTML = '<div class="muted">Жүктеу қатесі.</div>';
+      }
+
+      // Өтінімі қабылданған жобаларды жүктеу (ACCEPTED)
+      try {
+        const accepted = await apiFetch("/api/v1/projects/my-accepted");
+        const acceptedEl = document.getElementById("acceptedProjectsList");
+        if (accepted && accepted.length > 0) {
+          acceptedEl.innerHTML = accepted.map(p => `
+            <div class="project-item" style="border-left: 4px solid #16a34a">
+              <div style="display:flex; justify-content:space-between; align-items:center">
+                <strong>${p.title}</strong>
+                <span class="badge-accepted">✅ ҚАБЫЛДАНДЫ (МҮШЕ)</span>
+              </div>
+              <div class="muted" style="font-size:0.85rem; margin-top:4px">${p.description}</div>
+              <div style="font-size:0.8rem; margin-top:6px; font-weight:600">Стек: ${p.requiredSkills || 'Жоқ'}</div>
+              <div class="muted" style="font-size:0.8rem; margin-top:4px">Уйымдастырушы: ${p.owner ? (p.owner.firstName + ' ' + p.owner.lastName + ' - ' + p.owner.email) : 'Компания / Студент'}</div>
+            </div>
+          `).join('');
+        } else {
+          acceptedEl.innerHTML = '<div class="muted" style="font-size:0.85rem">Сізде әлі қабылданған жобалар жоқ.</div>';
+        }
+      } catch(e) {
+        document.getElementById("acceptedProjectsList").innerHTML = '<div class="muted">Жүктеу қатесі.</div>';
+      }
+    })();
+
+    // Сақтау формасы
+    document.getElementById("profileForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("saveBtn");
+      btn.disabled = true;
+
+      try {
+        await apiFetch("/api/v1/profile", {
+          method: "POST",
+          body: JSON.stringify({
+            university: document.getElementById("university").value,
+            major: document.getElementById("major").value,
+            skills: document.getElementById("skills").value,
+            githubUrl: document.getElementById("githubUrl").value,
+            leetcodeUrl: document.getElementById("leetcodeUrl").value,
+            codeforcesUrl: document.getElementById("codeforcesUrl").value,
+            otherLinks: document.getElementById("otherLinks").value,
+            bio: document.getElementById("bio").value,
+            isLookingForTeam: document.getElementById("isLookingForTeam").checked
+          })
+        });
+        showSuccess(alertEl, "Профиль деректері сәтті сақталды!");
+      } catch (err) {
+        showError(alertEl, err.message || "Сақтау кезінде қате шықты");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+</script>
+</body>
+</html>

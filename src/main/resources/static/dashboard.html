@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EduSkill AI — Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="shell">
+    <aside class="sidebar">
+        <div class="brand"><span class="dot"></span><span>EduSkill AI</span></div>
+        <nav class="nav" id="sidebarNav">
+            <a href="dashboard.html">Басты бет</a>
+            <a href="profile.html">Профиль</a>
+            <a href="projects.html" id="navProjects">Жобалар</a>
+            <a href="courses.html" class="student-only">Курстар</a>
+            <a href="ai.html" class="student-only">AI ұсыным</a>
+        </nav>
+        <div class="logout"><button class="btn btn-ghost btn-block" onclick="logout()">Шығу</button></div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <h1>Басты бет</h1>
+            <div>
+                <span id="roleBadge" class="badge" style="margin-right: 10px; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;"></span>
+                <span class="who" id="who"></span>
+            </div>
+        </div>
+
+        <!-- КОМПАНИЯ БАСТЫ БЕТІ -->
+        <div id="companyDashboard" style="display: none;">
+            <div class="card">
+                <h2>Компания панелі</h2>
+                <p class="muted">Сіз жүйеге Компания өкілі ретінде кірдіңіз. Бұл жерден жаңа стажировкалар жариялап, студенттердің өтінімдерін қабылдай аласыз.</p>
+            </div>
+
+            <div class="row">
+                <div class="card" style="flex:1">
+                    <h3>Стажировка жариялау</h3>
+                    <p class="muted">Студенттер үшін жаңа тағылымдама немесе жоба орналастырыңыз.</p>
+                    <a class="btn btn-ghost" href="projects.html">Жобаларды басқару</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- СТУДЕНТ БАСТЫ БЕТІ -->
+        <div id="studentDashboard" style="display: none;">
+            <div class="card">
+                <h2>Профиль күйі</h2>
+                <div id="profileStatus" class="muted">Жүктелуде…</div>
+            </div>
+
+            <div class="row">
+                <div class="card" style="flex:1">
+                    <h3>Жобалар</h3>
+                    <p class="muted">Қолжетімді стажировка мен pet-жобаларды қарап, өтінім беріңіз.</p>
+                    <a class="btn btn-ghost" href="projects.html">Жобаларды көру</a>
+                </div>
+                <div class="card" style="flex:1">
+                    <h3>AI ұсыным</h3>
+                    <p class="muted">Дағдыларыңызға сай курс ұсыныстарын алыңыз.</p>
+                    <a class="btn btn-ghost" href="ai.html">Ұсыныс алу</a>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+    requireAuth();
+    highlightNav();
+
+    document.getElementById("who").textContent = currentEmail();
+
+    const userRole = currentRole();
+    const roleBadgeEl = document.getElementById("roleBadge");
+
+    if (userRole === "COMPANY") {
+      // КОМПАНИЯ РӨЛІ
+      roleBadgeEl.textContent = "COMPANY";
+      roleBadgeEl.style.background = "#22c55e";
+      roleBadgeEl.style.color = "#fff";
+
+      // Менюден Студентке арналған "Курстар" мен "AI ұсынымды" жасырамыз
+      document.querySelectorAll(".student-only").forEach(el => el.style.display = "none");
+
+      // Компания панелін ашамыз
+      document.getElementById("companyDashboard").style.display = "block";
+
+    } else {
+      // СТУДЕНТ РӨЛІ
+      roleBadgeEl.textContent = "STUDENT";
+      roleBadgeEl.style.background = "#6366f1";
+      roleBadgeEl.style.color = "#fff";
+
+      // Студент панелін ашамыз
+      document.getElementById("studentDashboard").style.display = "block";
+
+      // Студенттің профилін жүктейміз
+      (async () => {
+        const statusEl = document.getElementById("profileStatus");
+        try {
+          const profile = await apiFetch("/api/v1/profile/me");
+          statusEl.innerHTML = `Университет: <strong>${profile.university || "—"}</strong> ·
+            Мамандық: <strong>${profile.major || "—"}</strong><br>
+            <a href="profile.html">Профильді өңдеу</a>`;
+        } catch (err) {
+          statusEl.innerHTML = `Профиліңіз әлі толтырылмаған. <a href="profile.html">Қазір толтыру</a>`;
+        }
+      })();
+    }
+</script>
+</body>
+</html>

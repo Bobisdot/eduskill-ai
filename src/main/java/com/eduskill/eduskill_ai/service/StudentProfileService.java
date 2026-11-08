@@ -1,6 +1,7 @@
 package com.eduskill.eduskill_ai.service;
 
 import com.eduskill.eduskill_ai.dto.StudentProfileRequest;
+import com.eduskill.eduskill_ai.dto.StudentProfileResponse;
 import com.eduskill.eduskill_ai.entity.StudentProfile;
 import com.eduskill.eduskill_ai.entity.User;
 import com.eduskill.eduskill_ai.repository.StudentProfileRepository;
@@ -49,12 +50,35 @@ public class StudentProfileService {
         User currentUser = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new RuntimeException("Қолданушы табылмады"));
 
-        // Команда іздеп жүрген барлық студенттерді базадан алу
         List<StudentProfile> allLooking = profileRepository.findByIsLookingForTeamTrue();
-
-        // Тізімнен өз-өзімізді алып тастаймыз (өзімізге өзіміз команда болмаймыз ғой)
         allLooking.removeIf(profile -> profile.getUser().getId().equals(currentUser.getId()));
 
         return allLooking;
+    }
+
+    public StudentProfileResponse getMyProfileResponse(String email) {
+        StudentProfile profile = getMyProfile(email);
+        return StudentProfileResponse.builder()
+                .id(profile.getId())
+                .userId(profile.getUser().getId())
+                .userEmail(profile.getUser().getEmail())
+                .firstName(profile.getUser().getFirstName())
+                .lastName(profile.getUser().getLastName())
+                .university(profile.getUniversity())
+                .major(profile.getMajor())
+                .skills(profile.getSkills())
+                .githubUrl(profile.getGithubUrl())
+                .leetcodeUrl(profile.getLeetcodeUrl())
+                .codeforcesUrl(profile.getCodeforcesUrl())
+                .otherLinks(profile.getOtherLinks())
+                .bio(profile.getBio())
+                .isLookingForTeam(profile.isLookingForTeam())
+                .build();
+    }
+
+    // Компания өкілдері студент профилін userId арқылы іздеп алу үшін
+    public StudentProfile getProfileByUserId(Long userId) {
+        return profileRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Студент профилі табылмады!"));
     }
 }

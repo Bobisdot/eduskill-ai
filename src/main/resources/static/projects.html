@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EduSkill AI — Жобалар мен Командалар</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .btn-view-profile {
+            background: #4f46e5; color: #ffffff; border: none;
+            padding: 5px 12px; border-radius: 6px; font-size: 0.8rem;
+            font-weight: 600; cursor: pointer; margin-left: 10px; transition: background 0.2s;
+        }
+        .btn-view-profile:hover { background: #4338ca; }
+
+        .btn-action {
+            padding: 5px 12px; border-radius: 6px; font-size: 0.8rem;
+            font-weight: 600; cursor: pointer; border: none; margin-left: 6px; transition: 0.2s;
+        }
+        .btn-accept { background: #16a34a; color: #ffffff; }
+        .btn-accept:hover { background: #15803d; }
+        .btn-reject { background: #dc2626; color: #ffffff; }
+        .btn-reject:hover { background: #b91c1c; }
+
+        /* Modal Style */
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6); display: none;
+            align-items: center; justify-content: center; z-index: 9999;
+        }
+        .modal-content {
+            background: #fff; border-radius: 12px; width: 90%; max-width: 520px;
+            padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); position: relative;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
+        .modal-title { font-size: 1.15rem; font-weight: 700; color: #0f172a; margin: 0; }
+        .close-btn { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b; }
+        .info-group { margin-bottom: 10px; }
+        .info-label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .info-val { font-size: 0.95rem; color: #1e293b; font-weight: 500; }
+
+        .badge-algo { background: #e0f2fe; color: #0369a1; }
+        .badge-internship { background: #e0e7ff; color: #4338ca; }
+        .badge-pet { background: #fef3c7; color: #d97706; }
+        .badge-owner { background: #dcfce7; color: #15803d; margin-left: 8px; }
+        .badge-accepted { background: #dcfce7; color: #166534; }
+        .badge-rejected { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+<div class="shell">
+    <aside class="sidebar">
+        <div class="brand"><span class="dot"></span><span>EduSkill AI</span></div>
+        <nav class="nav">
+            <a href="dashboard.html">Басты бет</a>
+            <a href="profile.html">Профиль</a>
+            <a href="projects.html">Жобалар</a>
+            <a href="courses.html">Курстар</a>
+            <a href="ai.html">AI ұсыным</a>
+        </nav>
+        <div class="logout"><button class="btn btn-ghost btn-block" onclick="logout()">Шығу</button></div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <h1 id="pageTitle">Жобалар, Стажировкалар және Командалар</h1>
+            <span class="who" id="who"></span>
+        </div>
+
+        <div id="alert" class="alert" style="display:none"></div>
+
+        <!-- КОМПАНИЯ / УНИВЕРСИТЕТ БӨЛІМІ -->
+        <div id="companySection" style="display:none; margin-bottom:24px;">
+            <div class="card">
+                <h3>Университет / Компания атынан хабарландыру жариялау</h3>
+                <form id="createCompanyProjectForm">
+                    <div class="field">
+                        <label class="label" for="compProjTitle">Атауы</label>
+                        <input class="input" id="compProjTitle" required>
+                    </div>
+                    <div class="field">
+                        <label class="label" for="compProjSkills">Талап етілетін стек / дағдылар</label>
+                        <input class="input" id="compProjSkills" placeholder="Java, Spring Boot, MySQL" required>
+                    </div>
+                    <div class="field">
+                        <label class="label" for="compProjDesc">Толық сипаттамасы</label>
+                        <textarea class="input" id="compProjDesc" rows="3" required></textarea>
+                    </div>
+                    <button class="btn btn-primary" type="submit" id="createCompBtn">Жариялау</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- СТУДЕНТ БӨЛІМІ -->
+        <div id="studentSection" style="display:none; margin-bottom:24px;">
+            <div class="card">
+                <h3>+ Жаңа Команда немесе Pet-жоба бастау (Студенттерге)</h3>
+                <form id="createPetProjectForm">
+                    <div class="field">
+                        <label class="label" for="petType">Бағыты / Түрі</label>
+                        <select class="input" id="petType">
+                            <option value="PET_PROJECT">Pet-жоба (Коллаборация)</option>
+                            <option value="ALGO_ESTAFETA">Алгоритмдік Эстафета / ICPC / LeetCode Команда</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label class="label" for="petTitle">Атауы</label>
+                        <input class="input" id="petTitle" placeholder="Мәселен: LeetCode Daily Relay / AI Assistant App" required>
+                    </div>
+                    <div class="row">
+                        <div class="field">
+                            <label class="label" for="petSkills">Стек / Дағдылар</label>
+                            <input class="input" id="petSkills" placeholder="C++, Java, Algorithms, React" required>
+                        </div>
+                        <div class="field">
+                            <label class="label" for="petGithub">GitHub немесе LeetCode/Codeforces сілтемесі</label>
+                            <input class="input" id="petGithub" placeholder="https://github.com/..." required>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label" for="petDesc">Сипаттамасы</label>
+                        <textarea class="input" id="petDesc" rows="2" required></textarea>
+                    </div>
+                    <button class="btn btn-primary" type="submit" id="createPetBtn">Жариялау</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- СҮЗГІЛЕР -->
+        <div class="filters" id="filtersSection">
+            <button class="btn active" data-type="ALL">Барлығы</button>
+            <button class="btn" data-type="INTERNSHIP">Стажировкалар</button>
+            <button class="btn" data-type="PET_PROJECT">Pet-жобалар</button>
+            <button class="btn" data-type="ALGO_ESTAFETA">Алгоритмдік Эстафета</button>
+        </div>
+
+        <div id="list" style="margin-top:20px;"></div>
+    </main>
+</div>
+
+<!-- СТУДЕНТ ПРОФИЛІН КӨРУГЕ АРНАЛҒАН МОДАЛЬДІ ТЕРЕЗЕ -->
+<div class="modal-backdrop" id="profileModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalStudentName">Студент Профилі</h3>
+            <button class="close-btn" onclick="closeProfileModal()">&times;</button>
+        </div>
+        <div id="modalProfileContent">
+            <div class="muted">Жүктелуде...</div>
+        </div>
+    </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+    requireAuth();
+    highlightNav();
+    const userEmail = currentEmail();
+    document.getElementById("who").textContent = userEmail;
+
+    const alertEl = document.getElementById("alert");
+    const listEl = document.getElementById("list");
+    const role = currentRole();
+
+    let allProjects = [];
+    let appliedIds = new Set();
+    let currentFilter = "ALL";
+
+    function badgeClass(type) {
+        if (type === "INTERNSHIP") return "badge-internship";
+        if (type === "ALGO_ESTAFETA") return "badge-algo";
+        return "badge-pet";
+    }
+    function badgeLabel(type) {
+        if (type === "INTERNSHIP") return "Стажировка / Универ";
+        if (type === "ALGO_ESTAFETA") return "Алгоритмдік Эстафета";
+        return "Pet-жоба";
+    }
+
+    if (role === "COMPANY") {
+      document.getElementById("pageTitle").textContent = "Стажировкалар мен Өтінімдерді басқару";
+      document.getElementById("companySection").style.display = "block";
+      document.getElementById("filtersSection").style.display = "none";
+    } else {
+      document.getElementById("studentSection").style.display = "block";
+    }
+
+    async function render() {
+      const items = currentFilter === "ALL" ? allProjects : allProjects.filter(p => p.type === currentFilter);
+
+      if (!items || items.length === 0) {
+        listEl.innerHTML = '<div class="empty">Бұл санатта жоба немесе команда табылмады.</div>';
+        return;
+      }
+
+      let html = '';
+      for (let p of items) {
+        const isOwner = p.owner && p.owner.email === userEmail;
+        let appsHtml = '';
+
+        if (role === "COMPANY" || isOwner) {
+          try {
+            const apps = await apiFetch(`/api/v1/projects/${p.id}/applications`);
+            if (apps && apps.length > 0) {
+              appsHtml = `
+                <h4 style="margin-top:12px; font-size:0.95rem">Түскен өтінімдер (Командаға қосылғысы келетіндер):</h4>
+                ${apps.map(a => {
+                  const name = a.applicant ? (a.applicant.firstName + ' ' + a.applicant.lastName) : 'Студент';
+                  const email = a.applicant ? a.applicant.email : '';
+                  const userId = a.applicant ? a.applicant.id : null;
+                  const status = a.status || 'PENDING';
+
+                  let statusBadge = `<span class="badge badge-pending">PENDING</span>`;
+                  if (status === 'ACCEPTED') statusBadge = `<span class="badge badge-accepted">✅ ҚАБЫЛДАНДЫ</span>`;
+                  if (status === 'REJECTED') statusBadge = `<span class="badge badge-rejected">❌ БАС ТАРТЫЛДЫ</span>`;
+
+                  return `
+                    <div style="background:#f8fafc; padding:12px; margin-top:8px; border-radius:8px; border-left:4px solid #4f46e5">
+                      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px">
+                          <div>
+                              <strong>Студент:</strong> ${name} (<a href="mailto:${email}">${email}</a>)${userId ? `<button class="btn-view-profile" onclick="openStudentModal('${userId}', '${name}', '${email}')">🔍 Профильді көру</button>` : ''}
+                          </div>
+                          <div>
+                              ${statusBadge}${status === 'PENDING' ? `
+                                  <button class="btn-action btn-accept" onclick="changeAppStatus(${a.id}, 'ACCEPTED')">✅ Қабылдау</button>
+                                  <button class="btn-action btn-reject" onclick="changeAppStatus(${a.id}, 'REJECTED')">❌ Бас тарту</button>
+                              ` : ''}
+                          </div>
+                      </div>
+                      <div class="muted" style="margin-top:6px; font-size:0.9rem">Ілеспе хат: "${a.coverLetter || 'Жоқ'}"</div>
+                    </div>
+                  `;
+                }).join('')}
+              `;
+            } else {
+              appsHtml = '<div class="muted" style="font-size:0.85rem; margin-top:6px">Өтінімдер әлі түскен жоқ.</div>';
+            }
+          } catch(e) {
+            appsHtml = '<div class="muted">Өтінімдерді жүктеу қатесі.</div>';
+          }
+        }
+
+        let actionButtonHtml = '';
+        if (isOwner) {
+          actionButtonHtml = '<span class="badge badge-owner">Сіздің жобаңыз</span>';
+        } else if (role === "STUDENT") {
+          if (appliedIds.has(p.id)) {
+            actionButtonHtml = '<span class="badge badge-pending">Өтінім жіберілген</span>';
+          } else {
+            actionButtonHtml = `<button class="btn btn-primary btn-sm" onclick="apply(${p.id})">Командаға қосылу / Өтінім беру</button>`;
+          }
+        }
+
+        html += `
+          <div class="card" style="margin-bottom:16px">
+            <span class="badge ${badgeClass(p.type)}">${badgeLabel(p.type)}</span>
+            <h3 style="margin-top:8px">${p.title}</h3>
+            <p class="muted">${p.description}</p>
+            ${p.requiredSkills ? `<div class="chips" style="margin-top:8px">${p.requiredSkills.split(",").map(s => `<span class="chip">${s.trim()}</span>`).join("")}</div>` : ""}
+
+            ${appsHtml}
+
+            <div style="margin-top:12px">
+              ${actionButtonHtml}
+            </div>
+          </div>
+        `;
+      }
+      listEl.innerHTML = html;
+    }
+
+    // ӨТІНІМ СТАТУСЫН ӨЗГЕРТУ (ACCEPTED / REJECTED)
+    async function changeAppStatus(appId, status) {
+      try {
+        await apiFetch(`/api/v1/projects/applications/${appId}/status?status=${status}`, { method: 'POST' });
+        showSuccess(alertEl, status === 'ACCEPTED' ? 'Студент командаға қабылданды!' : 'Өтінімнен бас тартылды!');
+        allProjects = await apiFetch("/api/v1/projects");
+        render();
+      } catch (e) {
+        showError(alertEl, e.message || 'Статусты өзгертүүдө ката чыкты');
+      }
+    }
+
+    async function openStudentModal(userId, name, email) {
+      const modal = document.getElementById("profileModal");
+      const content = document.getElementById("modalProfileContent");
+      document.getElementById("modalStudentName").textContent = name;
+
+      modal.style.display = "flex";
+      content.innerHTML = '<div class="muted">Жүктелуде...</div>';
+
+      try {
+        let prof = null;
+        try { prof = await apiFetch(`/api/v1/profile/user/${userId}`); }
+        catch(e) {
+          const list = await apiFetch("/api/v1/profile/team-hunters");
+          if (list) prof = list.find(p => p.user && p.user.id == userId);
+        }
+
+        if (prof) {
+          content.innerHTML = `
+            <div class="info-group"><div class="info-label">Email</div><div class="info-val">${email}</div></div>
+            <div class="info-group"><div class="info-label">Университет</div><div class="info-val">${prof.university || '—'}</div></div>
+            <div class="info-group"><div class="info-label">Мамандығы</div><div class="info-val">${prof.major || '—'}</div></div>
+            <div class="info-group"><div class="info-label">Дағдылары</div><div class="info-val">${prof.skills || '—'}</div></div>
+            <div class="info-group">
+                <div class="info-label">Сілтемелер</div>
+                <div class="info-val" style="margin-top:4px">
+                    ${prof.githubUrl ? `<a href="${prof.githubUrl}" target="_blank" style="margin-right:12px">🔗 GitHub Profile</a>` : ''}
+                    ${prof.leetcodeUrl ? `<a href="${prof.leetcodeUrl}" target="_blank" style="margin-right:12px">🧩 LeetCode</a>` : ''}
+                    ${prof.codeforcesUrl ? `<a href="${prof.codeforcesUrl}" target="_blank">🏆 Codeforces</a>` : ''}
+                </div>
+            </div>
+            <div class="info-group" style="margin-top:12px"><div class="info-label">Bio</div><div class="info-val" style="font-style:italic">"${prof.bio || 'Ақпарат көрсетілмеген.'}"</div></div>
+          `;
+        } else {
+          content.innerHTML = `<div class="info-group"><div class="info-label">Email</div><div class="info-val">${email}</div></div><div class="info-group"><div class="info-label">Мәртебе</div><div class="info-val text-muted">Студент профилін әлі сақтамаған.</div></div>`;
+        }
+      } catch(e) {
+        content.innerHTML = `<div class="info-group"><div class="info-label">Email</div><div class="info-val">${email}</div></div><div class="info-group"><div class="info-label">Профиль</div><div class="info-val text-muted">Студент деректері табылмады.</div></div>`;
+      }
+    }
+
+    function closeProfileModal() {
+      document.getElementById("profileModal").style.display = "none";
+    }
+
+    async function apply(projectId) {
+      const coverLetter = prompt("Хабарламаңыз / Таныстыруыңыз (қай универденсіз, дағдыларыңыз):") || "";
+      try {
+        await apiFetch(`/api/v1/projects/${projectId}/apply`, {
+          method: "POST",
+          body: JSON.stringify({ coverLetter })
+        });
+        appliedIds.add(projectId);
+        showSuccess(alertEl, "Өтінім / Командаға сұраныс сәтті жіберілді!");
+        allProjects = await apiFetch("/api/v1/projects");
+        render();
+      } catch (err) {
+        showError(alertEl, err.message || "Өтінім жіберу кезінде қате шықты");
+      }
+    }
+
+    if (document.getElementById("createCompanyProjectForm")) {
+      document.getElementById("createCompanyProjectForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById("createCompBtn");
+        btn.disabled = true;
+        try {
+          await apiFetch("/api/v1/projects", {
+            method: "POST",
+            body: JSON.stringify({
+              title: document.getElementById("compProjTitle").value,
+              type: "INTERNSHIP",
+              requiredSkills: document.getElementById("compProjSkills").value,
+              description: document.getElementById("compProjDesc").value
+            })
+          });
+          showSuccess(alertEl, "Хабарландыру сәтті жарияланды!");
+          document.getElementById("createCompanyProjectForm").reset();
+          allProjects = await apiFetch("/api/v1/projects");
+          render();
+        } catch(err) { showError(alertEl, err.message); }
+        finally { btn.disabled = false; }
+      });
+    }
+
+    if (document.getElementById("createPetProjectForm")) {
+      document.getElementById("createPetProjectForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById("createPetBtn");
+        btn.disabled = true;
+        const github = document.getElementById("petGithub").value.trim();
+        const type = document.getElementById("petType").value;
+        const desc = document.getElementById("petDesc").value.trim() + " | Link: " + github;
+
+        try {
+          await apiFetch("/api/v1/projects", {
+            method: "POST",
+            body: JSON.stringify({
+              title: document.getElementById("petTitle").value,
+              type: type,
+              requiredSkills: document.getElementById("petSkills").value,
+              description: desc
+            })
+          });
+          showSuccess(alertEl, "Команда / Жоба сәтті жарияланды!");
+          document.getElementById("createPetProjectForm").reset();
+          allProjects = await apiFetch("/api/v1/projects");
+          render();
+        } catch(err) { showError(alertEl, err.message); }
+        finally { btn.disabled = false; }
+      });
+    }
+
+    document.querySelectorAll(".filters .btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".filters .btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentFilter = btn.dataset.type;
+        render();
+      });
+    });
+
+    (async () => {
+      try {
+        allProjects = await apiFetch("/api/v1/projects");
+        if (role === "STUDENT") {
+          try {
+            const myApps = await apiFetch("/api/v1/projects/my-applications");
+            appliedIds = new Set(myApps.map(a => a.project.id));
+          } catch (e) {}
+        }
+        render();
+      } catch (err) {
+        showError(alertEl, err.message || "Жобаларды жүктеу кезінде қате шықты");
+      }
+    })();
+</script>
+</body>
+</html>
