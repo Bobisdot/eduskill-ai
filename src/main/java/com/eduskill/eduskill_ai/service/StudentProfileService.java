@@ -8,6 +8,8 @@ import com.eduskill.eduskill_ai.repository.StudentProfileRepository;
 import com.eduskill.eduskill_ai.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -35,6 +37,9 @@ public class StudentProfileService {
         profile.setLookingForTeam(request.isLookingForTeam());
         profile.setBio(request.getBio());
 
+        // Профильді жаңартқанда да стрик есептеледі
+        updateStreakLogic(profile);
+
         return profileRepository.save(profile);
     }
 
@@ -42,8 +47,12 @@ public class StudentProfileService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Қолданушы табылмады"));
 
-        return profileRepository.findByUserId(user.getId())
+        StudentProfile profile = profileRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException("Профиль әлі толтырылмаған"));
+
+        // Профильге кірген сайын күнделікті стрик жаңартылып, базаға сақталады
+        updateStreakLogic(profile);
+        return profileRepository.save(profile);
     }
 
     public List<StudentProfile> getStudentsLookingForTeam(String currentUserEmail) {
@@ -73,12 +82,38 @@ public class StudentProfileService {
                 .otherLinks(profile.getOtherLinks())
                 .bio(profile.getBio())
                 .isLookingForTeam(profile.isLookingForTeam())
+                .currentStreak(profile.getCurrentStreak())
+                .lastActiveDate(profile.getLastActiveDate())
                 .build();
     }
 
-    // Компания өкілдері студент профилін userId арқылы іздеп алу үшін
     public StudentProfile getProfileByUserId(Long userId) {
         return profileRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Студент профилі табылмады!"));
+    }
+
+    // 🔥 Day Streak есептеу алгоритмі
+    private void updateStreakLogic(StudentProfile profile) {
+        LocalDate today = LocalDate.now();
+        LocalDate lastActive = profile.getLastActiveDate();
+
+        if (profile.getCurrentStreak() == null) {
+            profile.setCurrentStreak(0);
+        }
+
+        if (lastActive == null) {
+            // Бірінші рет белсенді болып тұр
+            profile.setCurrentStreak(1);
+            profile.setLastActiveDate(today);
+        } else if (lastActive.equals(today.minusDays(1))) {
+            // Кеше де кірген — стрик өседі
+            profile.setCurrentStreak(profile.getCurrentStreak() + 1);
+            profile.setLastActiveDate(today);
+        } else if (!lastActive.equals(today)) {
+            // 1 күннен көп өтіп кетсе — стрик күйіп, кайта 1 болады
+            profile.setCurrentStreak(1);
+            profile.setLastActiveDate(today);
+        }
+        // Егер кеше сақталған болып, бүгін қайта кірсе — lastActive бұрыннан today, стрик өзгермейді
     }
 }

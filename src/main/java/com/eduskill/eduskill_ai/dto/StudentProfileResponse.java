@@ -3,11 +3,13 @@ package com.eduskill.eduskill_ai.dto;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDate;
+
 @Data
 @Builder
 public class StudentProfileResponse {
     private Integer id;
-    private Long userId; // <-- ДӘЛ ОСЫ ЖЕРДІ Integer-ден Long-ға АУЫСТЫР
+    private Long userId;
     private String userEmail;
     private String firstName;
     private String lastName;
@@ -20,4 +22,8 @@ public class StudentProfileResponse {
     private String otherLinks;
     private String bio;
     private boolean isLookingForTeam;
+
+
+    private Integer currentStreak;
+    private LocalDate lastActiveDate;
 }

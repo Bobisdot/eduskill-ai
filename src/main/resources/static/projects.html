@@ -22,6 +22,13 @@
         .btn-reject { background: #dc2626; color: #ffffff; }
         .btn-reject:hover { background: #b91c1c; }
 
+        .btn-delete-proj {
+            background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5;
+            padding: 5px 12px; border-radius: 6px; font-size: 0.8rem;
+            font-weight: 600; cursor: pointer; margin-left: 10px; transition: 0.2s;
+        }
+        .btn-delete-proj:hover { background: #fca5a5; color: #991b1b; }
+
         /* Modal Style */
         .modal-backdrop {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -29,15 +36,21 @@
             align-items: center; justify-content: center; z-index: 9999;
         }
         .modal-content {
-            background: #fff; border-radius: 12px; width: 90%; max-width: 520px;
+            background: #fff; border-radius: 12px; width: 90%; max-width: 580px;
             padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); position: relative;
+            max-height: 85vh; overflow-y: auto;
         }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
         .modal-title { font-size: 1.15rem; font-weight: 700; color: #0f172a; margin: 0; }
         .close-btn { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #64748b; }
-        .info-group { margin-bottom: 10px; }
+        .info-group { margin-bottom: 12px; }
         .info-label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
         .info-val { font-size: 0.95rem; color: #1e293b; font-weight: 500; }
+
+        .proj-badge-mini {
+            background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px;
+            padding: 10px 14px; margin-top: 8px; font-size: 0.85rem;
+        }
 
         .badge-algo { background: #e0f2fe; color: #0369a1; }
         .badge-internship { background: #e0e7ff; color: #4338ca; }
@@ -45,6 +58,23 @@
         .badge-owner { background: #dcfce7; color: #15803d; margin-left: 8px; }
         .badge-accepted { background: #dcfce7; color: #166534; }
         .badge-rejected { background: #fee2e2; color: #991b1b; }
+
+        .lang-box {
+            padding: 12px 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 10px;
+        }
+        .lang-select {
+            width: 100%;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #0f172a;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -52,18 +82,28 @@
     <aside class="sidebar">
         <div class="brand"><span class="dot"></span><span>EduSkill AI</span></div>
         <nav class="nav">
-            <a href="dashboard.html">Басты бет</a>
-            <a href="profile.html">Профиль</a>
-            <a href="projects.html">Жобалар</a>
-            <a href="courses.html">Курстар</a>
-            <a href="ai.html">AI ұсыным</a>
+            <a href="dashboard.html" data-i18n="nav_dashboard">Басты бет</a>
+            <a href="profile.html" data-i18n="nav_profile">Профиль</a>
+            <a href="projects.html" data-i18n="nav_projects">Жобалар</a>
+            <a href="courses.html" data-i18n="nav_courses">Курстар</a>
+            <a href="ai.html" data-i18n="nav_ai">AI ұсыным</a>
         </nav>
-        <div class="logout"><button class="btn btn-ghost btn-block" onclick="logout()">Шығу</button></div>
+
+        <!-- ТІЛДІ АУЫСТЫРУ КҮЙІ (LANG SWITCHER) -->
+        <div class="lang-box">
+            <select id="langSwitcher" onchange="changeLanguage(this.value)" class="lang-select">
+                <option value="kk">🇰🇿 Қазақша</option>
+                <option value="ru">🇷🇺 Русский</option>
+                <option value="en">🇬🇧 English</option>
+            </select>
+        </div>
+
+        <div class="logout"><button class="btn btn-ghost btn-block" onclick="logout()" data-i18n="logout">Шығу</button></div>
     </aside>
 
     <main class="main">
         <div class="topbar">
-            <h1 id="pageTitle">Жобалар, Стажировкалар және Командалар</h1>
+            <h1 id="pageTitle" data-i18n="page_title">Жобалар, Стажировкалар және Командалар</h1>
             <span class="who" id="who"></span>
         </div>
 
@@ -72,21 +112,21 @@
         <!-- КОМПАНИЯ / УНИВЕРСИТЕТ БӨЛІМІ -->
         <div id="companySection" style="display:none; margin-bottom:24px;">
             <div class="card">
-                <h3>Университет / Компания атынан хабарландыру жариялау</h3>
+                <h3 data-i18n="create_comp_title">Университет / Компания атынан хабарландыру жариялау</h3>
                 <form id="createCompanyProjectForm">
                     <div class="field">
-                        <label class="label" for="compProjTitle">Атауы</label>
+                        <label class="label" for="compProjTitle" data-i18n="lbl_title">Атауы</label>
                         <input class="input" id="compProjTitle" required>
                     </div>
                     <div class="field">
-                        <label class="label" for="compProjSkills">Талап етілетін стек / дағдылар</label>
+                        <label class="label" for="compProjSkills" data-i18n="lbl_skills">Талап етілетін стек / дағдылар</label>
                         <input class="input" id="compProjSkills" placeholder="Java, Spring Boot, MySQL" required>
                     </div>
                     <div class="field">
-                        <label class="label" for="compProjDesc">Толық сипаттамасы</label>
+                        <label class="label" for="compProjDesc" data-i18n="lbl_desc">Толық сипаттамасы</label>
                         <textarea class="input" id="compProjDesc" rows="3" required></textarea>
                     </div>
-                    <button class="btn btn-primary" type="submit" id="createCompBtn">Жариялау</button>
+                    <button class="btn btn-primary" type="submit" id="createCompBtn" data-i18n="btn_publish">Жариялау</button>
                 </form>
             </div>
         </div>
@@ -94,44 +134,44 @@
         <!-- СТУДЕНТ БӨЛІМІ -->
         <div id="studentSection" style="display:none; margin-bottom:24px;">
             <div class="card">
-                <h3>+ Жаңа Команда немесе Pet-жоба бастау (Студенттерге)</h3>
+                <h3 data-i18n="create_pet_title">+ Жаңа Команда немесе Pet-жоба бастау (Студенттерге)</h3>
                 <form id="createPetProjectForm">
                     <div class="field">
-                        <label class="label" for="petType">Бағыты / Түрі</label>
+                        <label class="label" for="petType" data-i18n="lbl_type">Бағыты / Түрі</label>
                         <select class="input" id="petType">
-                            <option value="PET_PROJECT">Pet-жоба (Коллаборация)</option>
-                            <option value="ALGO_ESTAFETA">Алгоритмдік Эстафета / ICPC / LeetCode Команда</option>
+                            <option value="PET_PROJECT" data-i18n="opt_pet">Pet-жоба (Коллаборация)</option>
+                            <option value="ALGO_ESTAFETA" data-i18n="opt_algo">Алгоритмдік Эстафета / ICPC / LeetCode Команда</option>
                         </select>
                     </div>
                     <div class="field">
-                        <label class="label" for="petTitle">Атауы</label>
-                        <input class="input" id="petTitle" placeholder="Мәселен: LeetCode Daily Relay / AI Assistant App" required>
+                        <label class="label" for="petTitle" data-i18n="lbl_title">Атауы</label>
+                        <input class="input" id="petTitle" placeholder="LeetCode Daily Relay / AI Assistant App" required>
                     </div>
                     <div class="row">
                         <div class="field">
-                            <label class="label" for="petSkills">Стек / Дағдылар</label>
+                            <label class="label" for="petSkills" data-i18n="lbl_skills">Стек / Дағдылар</label>
                             <input class="input" id="petSkills" placeholder="C++, Java, Algorithms, React" required>
                         </div>
                         <div class="field">
-                            <label class="label" for="petGithub">GitHub немесе LeetCode/Codeforces сілтемесі</label>
+                            <label class="label" for="petGithub" data-i18n="lbl_link">GitHub немесе LeetCode/Codeforces сілтемесі</label>
                             <input class="input" id="petGithub" placeholder="https://github.com/..." required>
                         </div>
                     </div>
                     <div class="field">
-                        <label class="label" for="petDesc">Сипаттамасы</label>
+                        <label class="label" for="petDesc" data-i18n="lbl_desc">Сипаттамасы</label>
                         <textarea class="input" id="petDesc" rows="2" required></textarea>
                     </div>
-                    <button class="btn btn-primary" type="submit" id="createPetBtn">Жариялау</button>
+                    <button class="btn btn-primary" type="submit" id="createPetBtn" data-i18n="btn_publish">Жариялау</button>
                 </form>
             </div>
         </div>
 
         <!-- СҮЗГІЛЕР -->
         <div class="filters" id="filtersSection">
-            <button class="btn active" data-type="ALL">Барлығы</button>
-            <button class="btn" data-type="INTERNSHIP">Стажировкалар</button>
-            <button class="btn" data-type="PET_PROJECT">Pet-жобалар</button>
-            <button class="btn" data-type="ALGO_ESTAFETA">Алгоритмдік Эстафета</button>
+            <button class="btn active" data-type="ALL" data-i18n="filter_all">Барлығы</button>
+            <button class="btn" data-type="INTERNSHIP" data-i18n="filter_internship">Стажировкалар</button>
+            <button class="btn" data-type="PET_PROJECT" data-i18n="filter_pet">Pet-жобалар</button>
+            <button class="btn" data-type="ALGO_ESTAFETA" data-i18n="filter_algo">Алгоритмдік Эстафета</button>
         </div>
 
         <div id="list" style="margin-top:20px;"></div>
@@ -142,7 +182,7 @@
 <div class="modal-backdrop" id="profileModal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 class="modal-title" id="modalStudentName">Студент Профилі</h3>
+            <h3 class="modal-title" id="modalStudentName" data-i18n="modal_student_title">Студент Профилі</h3>
             <button class="close-btn" onclick="closeProfileModal()">&times;</button>
         </div>
         <div id="modalProfileContent">
@@ -153,6 +193,102 @@
 
 <script src="js/api.js"></script>
 <script>
+    // 🌐 ТІЛДЕР СӨЗДІГІ (I18N DICTIONARY)
+    const translations = {
+      kk: {
+        nav_dashboard: "Басты бет", nav_profile: "Профиль", nav_projects: "Жобалар", nav_courses: "Курстар", nav_ai: "AI ұсыным",
+        logout: "Шығу", page_title: "Жобалар, Стажировкалар және Командалар", company_page_title: "Стажировкалар мен Өтінімдерді басқару",
+        filter_all: "Барлығы", filter_internship: "Стажировкалар", filter_pet: "Pet-жобалар", filter_algo: "Алгоритмдік Эстафета",
+        create_comp_title: "Университет / Компания атынан хабарландыру жариялау",
+        create_pet_title: "+ Жаңа Команда немесе Pet-жоба бастау (Студенттерге)",
+        lbl_title: "Атауы", lbl_skills: "Талап етілетін стек / дағдылар", lbl_desc: "Сипаттамасы", lbl_type: "Бағыты / Түрі", lbl_link: "GitHub немесе сілтеме",
+        opt_pet: "Pet-жоба (Коллаборация)", opt_algo: "Алгоритмдік Эстафета / ICPC / LeetCode Команда",
+        btn_publish: "Жариялау", btn_apply: "Командаға қосылу / Өтінім беру", btn_delete: "🗑 Жобаны өшіру",
+        badge_owner: "Сіздің жобаңыз", badge_applied: "Өтінім жіберілген",
+        type_internship: "Стажировка / Универ", type_algo: "Алгоритмдік Эстафета", type_pet: "Pet-жоба",
+        incoming_apps: "Түскен өтінімдер (Командаға қосылғысы келетіндер):",
+        btn_view_profile: "🔍 Профильді көру", btn_accept: "✅ Қабылдау", btn_reject: "❌ Бас тарту",
+        cover_letter: "Ілеспе хат", status_accepted: "✅ ҚАБЫЛДАНДЫ", status_rejected: "❌ БАС ТАРТЫЛДЫ", status_pending: "PENDING",
+        modal_student_title: "Студент Профилі", student_loading: "Студенттің профилі мен командалары жүктелуде...",
+        university: "Университет", major: "Мамандығы", skills: "Дағдылары", links: "Сілтемелер & Профильдер", bio: "Bio (Өзі жайлы)",
+        active_projects_title: "🚀 Қатысып жатқан Pet-жобалары, Эстафеталары және Команда мүшелері:",
+        team_members: "👥 Команда құрамы:", role_author: "АВТОР", role_member: "МҮШЕ",
+        no_projects: "Әзірге белсенді жобалары жоқ.", student_no_profile: "Студент профилін сақтамаған.",
+        empty_list: "Бұл санатта жоба немесе команда табылмады."
+      },
+      ru: {
+        nav_dashboard: "Главная", nav_profile: "Профиль", nav_projects: "Проекты", nav_courses: "Курсы", nav_ai: "AI Рекомендации",
+        logout: "Выйти", page_title: "Проекты, Стажировки и Команды", company_page_title: "Управление Стажировками и Заявками",
+        filter_all: "Все", filter_internship: "Стажировки", filter_pet: "Pet-проекты", filter_algo: "Алгоритмическая Эстафета",
+        create_comp_title: "Опубликовать объявление от Университета / Компании",
+        create_pet_title: "+ Создать Команду или Pet-проект (Студентам)",
+        lbl_title: "Название", lbl_skills: "Требуемый стек / навыки", lbl_desc: "Описание", lbl_type: "Направление / Тип", lbl_link: "Ссылка на GitHub или профиль",
+        opt_pet: "Pet-проект (Коллаборация)", opt_algo: "Алгоритмическая Эстафета / ICPC / LeetCode Команда",
+        btn_publish: "Опубликовать", btn_apply: "Вступить в команду / Подать заявку", btn_delete: "🗑 Удалить проект",
+        badge_owner: "Ваш проект", badge_applied: "Заявка отправлена",
+        type_internship: "Стажировка / Универ", type_algo: "Алгоритмическая Эстафета", type_pet: "Pet-проект",
+        incoming_apps: "Входящие заявки (Желающие вступить):",
+        btn_view_profile: "🔍 Посмотреть профиль", btn_accept: "✅ Принять", btn_reject: "❌ Отклонить",
+        cover_letter: "Сопроводительное письмо", status_accepted: "✅ ПРИНЯТ", status_rejected: "❌ ОТКЛОНЕН", status_pending: "PENDING",
+        modal_student_title: "Профиль Студента", student_loading: "Загрузка профиля и команд студента...",
+        university: "Университет", major: "Специальность", skills: "Навыки", links: "Ссылки и Профили", bio: "Bio (О себе)",
+        active_projects_title: "🚀 Участие в Pet-проектах, Эстафетах и Состав команд:",
+        team_members: "👥 Состав команды:", role_author: "АВТОР", role_member: "УЧАСТНИК",
+        no_projects: "Пока нет активных проектов.", student_no_profile: "Студент еще не заполнил профиль.",
+        empty_list: "В этой категории проекты или команды не найдены."
+      },
+      en: {
+        nav_dashboard: "Dashboard", nav_profile: "Profile", nav_projects: "Projects", nav_courses: "Courses", nav_ai: "AI Recommendation",
+        logout: "Logout", page_title: "Projects, Internships & Teams", company_page_title: "Manage Internships & Applications",
+        filter_all: "All", filter_internship: "Internships", filter_pet: "Pet Projects", filter_algo: "Algo Relay",
+        create_comp_title: "Post an Announcement (University / Company)",
+        create_pet_title: "+ Start a New Team or Pet Project (For Students)",
+        lbl_title: "Title", lbl_skills: "Required Stack / Skills", lbl_desc: "Description", lbl_type: "Type / Category", lbl_link: "GitHub or Profile Link",
+        opt_pet: "Pet Project (Collaboration)", opt_algo: "Algo Relay / ICPC / LeetCode Team",
+        btn_publish: "Publish", btn_apply: "Join Team / Apply", btn_delete: "🗑 Delete Project",
+        badge_owner: "Your Project", badge_applied: "Application Sent",
+        type_internship: "Internship / Uni", type_algo: "Algo Relay", type_pet: "Pet Project",
+        incoming_apps: "Incoming Applications (Want to join):",
+        btn_view_profile: "🔍 View Profile", btn_accept: "✅ Accept", btn_reject: "❌ Reject",
+        cover_letter: "Cover Letter", status_accepted: "✅ ACCEPTED", status_rejected: "❌ REJECTED", status_pending: "PENDING",
+        modal_student_title: "Student Profile", student_loading: "Loading profile and team details...",
+        university: "University", major: "Major", skills: "Skills", links: "Links & Profiles", bio: "Bio (About)",
+        active_projects_title: "🚀 Active Pet Projects, Relays & Team Members:",
+        team_members: "👥 Team Members:", role_author: "AUTHOR", role_member: "MEMBER",
+        no_projects: "No active projects yet.", student_no_profile: "Student has not saved profile details.",
+        empty_list: "No projects or teams found in this category."
+      }
+    };
+
+    function currentLang() {
+      return localStorage.getItem("app_lang") || "kk";
+    }
+
+    function changeLanguage(lang) {
+      localStorage.setItem("app_lang", lang);
+      applyTranslations();
+      render(); // Тізімді де жаңа тілмен қайта сүзу
+    }
+
+    function applyTranslations() {
+      const lang = currentLang();
+      const t = translations[lang];
+
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (t[key]) el.textContent = t[key];
+      });
+
+      const switcher = document.getElementById("langSwitcher");
+      if (switcher) switcher.value = lang;
+
+      if (role === "COMPANY") {
+        document.getElementById("pageTitle").textContent = t.company_page_title;
+      } else {
+        document.getElementById("pageTitle").textContent = t.page_title;
+      }
+    }
+
     requireAuth();
     highlightNav();
     const userEmail = currentEmail();
@@ -172,13 +308,13 @@
         return "badge-pet";
     }
     function badgeLabel(type) {
-        if (type === "INTERNSHIP") return "Стажировка / Универ";
-        if (type === "ALGO_ESTAFETA") return "Алгоритмдік Эстафета";
-        return "Pet-жоба";
+        const t = translations[currentLang()];
+        if (type === "INTERNSHIP") return t.type_internship;
+        if (type === "ALGO_ESTAFETA") return t.type_algo;
+        return t.type_pet;
     }
 
     if (role === "COMPANY") {
-      document.getElementById("pageTitle").textContent = "Стажировкалар мен Өтінімдерді басқару";
       document.getElementById("companySection").style.display = "block";
       document.getElementById("filtersSection").style.display = "none";
     } else {
@@ -186,10 +322,11 @@
     }
 
     async function render() {
+      const t = translations[currentLang()];
       const items = currentFilter === "ALL" ? allProjects : allProjects.filter(p => p.type === currentFilter);
 
       if (!items || items.length === 0) {
-        listEl.innerHTML = '<div class="empty">Бұл санатта жоба немесе команда табылмады.</div>';
+        listEl.innerHTML = `<div class="empty">${t.empty_list}</div>`;
         return;
       }
 
@@ -203,37 +340,37 @@
             const apps = await apiFetch(`/api/v1/projects/${p.id}/applications`);
             if (apps && apps.length > 0) {
               appsHtml = `
-                <h4 style="margin-top:12px; font-size:0.95rem">Түскен өтінімдер (Командаға қосылғысы келетіндер):</h4>
+                <h4 style="margin-top:12px; font-size:0.95rem">${t.incoming_apps}</h4>
                 ${apps.map(a => {
-                  const name = a.applicant ? (a.applicant.firstName + ' ' + a.applicant.lastName) : 'Студент';
+                  const name = a.applicant ? (a.applicant.firstName + ' ' + a.applicant.lastName) : 'Student';
                   const email = a.applicant ? a.applicant.email : '';
                   const userId = a.applicant ? a.applicant.id : null;
                   const status = a.status || 'PENDING';
 
-                  let statusBadge = `<span class="badge badge-pending">PENDING</span>`;
-                  if (status === 'ACCEPTED') statusBadge = `<span class="badge badge-accepted">✅ ҚАБЫЛДАНДЫ</span>`;
-                  if (status === 'REJECTED') statusBadge = `<span class="badge badge-rejected">❌ БАС ТАРТЫЛДЫ</span>`;
+                  let statusBadge = `<span class="badge badge-pending">${t.status_pending}</span>`;
+                  if (status === 'ACCEPTED') statusBadge = `<span class="badge badge-accepted">${t.status_accepted}</span>`;
+                  if (status === 'REJECTED') statusBadge = `<span class="badge badge-rejected">${t.status_rejected}</span>`;
 
                   return `
                     <div style="background:#f8fafc; padding:12px; margin-top:8px; border-radius:8px; border-left:4px solid #4f46e5">
                       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px">
                           <div>
-                              <strong>Студент:</strong> ${name} (<a href="mailto:${email}">${email}</a>)${userId ? `<button class="btn-view-profile" onclick="openStudentModal('${userId}', '${name}', '${email}')">🔍 Профильді көру</button>` : ''}
+                              <strong>Студент:</strong> ${name} (<a href="mailto:${email}">${email}</a>)${userId ? `<button class="btn-view-profile" onclick="openStudentModal('${userId}', '${name}', '${email}')">${t.btn_view_profile}</button>` : ''}
                           </div>
                           <div>
                               ${statusBadge}${status === 'PENDING' ? `
-                                  <button class="btn-action btn-accept" onclick="changeAppStatus(${a.id}, 'ACCEPTED')">✅ Қабылдау</button>
-                                  <button class="btn-action btn-reject" onclick="changeAppStatus(${a.id}, 'REJECTED')">❌ Бас тарту</button>
+                                  <button class="btn-action btn-accept" onclick="changeAppStatus(${a.id}, 'ACCEPTED')">${t.btn_accept}</button>
+                                  <button class="btn-action btn-reject" onclick="changeAppStatus(${a.id}, 'REJECTED')">${t.btn_reject}</button>
                               ` : ''}
                           </div>
                       </div>
-                      <div class="muted" style="margin-top:6px; font-size:0.9rem">Ілеспе хат: "${a.coverLetter || 'Жоқ'}"</div>
+                      <div class="muted" style="margin-top:6px; font-size:0.9rem">${t.cover_letter}: "${a.coverLetter || '—'}"</div>
                     </div>
                   `;
                 }).join('')}
               `;
             } else {
-              appsHtml = '<div class="muted" style="font-size:0.85rem; margin-top:6px">Өтінімдер әлі түскен жоқ.</div>';
+              appsHtml = `<div class="muted" style="font-size:0.85rem; margin-top:6px">Өтінімдер әлі түскен жоқ.</div>`;
             }
           } catch(e) {
             appsHtml = '<div class="muted">Өтінімдерді жүктеу қатесі.</div>';
@@ -242,12 +379,15 @@
 
         let actionButtonHtml = '';
         if (isOwner) {
-          actionButtonHtml = '<span class="badge badge-owner">Сіздің жобаңыз</span>';
+          actionButtonHtml = `
+            <span class="badge badge-owner">${t.badge_owner}</span>
+            <button class="btn-delete-proj" onclick="deleteProject(${p.id})">${t.btn_delete}</button>
+          `;
         } else if (role === "STUDENT") {
           if (appliedIds.has(p.id)) {
-            actionButtonHtml = '<span class="badge badge-pending">Өтінім жіберілген</span>';
+            actionButtonHtml = `<span class="badge badge-pending">${t.badge_applied}</span>`;
           } else {
-            actionButtonHtml = `<button class="btn btn-primary btn-sm" onclick="apply(${p.id})">Командаға қосылу / Өтінім беру</button>`;
+            actionButtonHtml = `<button class="btn btn-primary btn-sm" onclick="apply(${p.id})">${t.btn_apply}</button>`;
           }
         }
 
@@ -260,8 +400,8 @@
 
             ${appsHtml}
 
-            <div style="margin-top:12px">
-              ${actionButtonHtml}
+            <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center">
+              <div>${actionButtonHtml}</div>
             </div>
           </div>
         `;
@@ -269,25 +409,14 @@
       listEl.innerHTML = html;
     }
 
-    // ӨТІНІМ СТАТУСЫН ӨЗГЕРТУ (ACCEPTED / REJECTED)
-    async function changeAppStatus(appId, status) {
-      try {
-        await apiFetch(`/api/v1/projects/applications/${appId}/status?status=${status}`, { method: 'POST' });
-        showSuccess(alertEl, status === 'ACCEPTED' ? 'Студент командаға қабылданды!' : 'Өтінімнен бас тартылды!');
-        allProjects = await apiFetch("/api/v1/projects");
-        render();
-      } catch (e) {
-        showError(alertEl, e.message || 'Статусты өзгертүүдө ката чыкты');
-      }
-    }
-
     async function openStudentModal(userId, name, email) {
+      const t = translations[currentLang()];
       const modal = document.getElementById("profileModal");
       const content = document.getElementById("modalProfileContent");
       document.getElementById("modalStudentName").textContent = name;
 
       modal.style.display = "flex";
-      content.innerHTML = '<div class="muted">Жүктелуде...</div>';
+      content.innerHTML = `<div class="muted">${t.student_loading}</div>`;
 
       try {
         let prof = null;
@@ -297,27 +426,107 @@
           if (list) prof = list.find(p => p.user && p.user.id == userId);
         }
 
+        let studentProjectsHtml = '';
+        try {
+          const allProjs = await apiFetch("/api/v1/projects");
+          const studentProjs = [];
+
+          for (let pr of allProjs) {
+            const isOwner = pr.owner && pr.owner.id == userId;
+            let teamMembersList = [];
+
+            if (pr.owner) {
+              teamMembersList.push(`👑 ${pr.owner.firstName || t.role_author} (${pr.owner.email})`);
+            }
+
+            try {
+              const prApps = await apiFetch(`/api/v1/projects/${pr.id}/applications`);
+              if (prApps) {
+                const accepted = prApps.filter(ap => ap.status === 'ACCEPTED');
+                accepted.forEach(ap => {
+                  if (ap.applicant) {
+                    teamMembersList.push(`🤝 ${ap.applicant.firstName || t.role_member} (${ap.applicant.email})`);
+                  }
+                });
+
+                const isAcceptedMember = accepted.some(ap => ap.applicant && ap.applicant.id == userId);
+                if (isOwner || isAcceptedMember) {
+                  studentProjs.push({
+                    project: pr,
+                    role: isOwner ? t.role_author : t.role_member,
+                    members: teamMembersList
+                  });
+                }
+              }
+            } catch(err) {
+              if (isOwner) {
+                studentProjs.push({
+                  project: pr,
+                  role: t.role_author,
+                  members: teamMembersList
+                });
+              }
+            }
+          }
+
+          if (studentProjs.length > 0) {
+            studentProjectsHtml = studentProjs.map(sp => `
+              <div class="proj-badge-mini">
+                <div style="display:flex; justify-content:space-between; align-items:center">
+                  <strong>${sp.project.title}</strong>
+                  <span class="badge ${sp.role === t.role_author ? 'badge-owner' : 'badge-accepted'}">${sp.role}</span>
+                </div>
+                <div class="muted" style="font-size:0.8rem; margin-top:4px">${sp.project.description}</div>
+                <div style="font-size:0.75rem; font-weight:600; margin-top:4px">Стек: ${sp.project.requiredSkills || '—'}</div>
+                <div style="font-size:0.8rem; background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:6px; margin-top:6px">
+                  <strong style="color:#4f46e5">${t.team_members}</strong>
+                  <div style="font-size:0.75rem; color:#334155; margin-top:2px">
+                    ${sp.members.join('<br>')}
+                  </div>
+                </div>
+              </div>
+            `).join('');
+          } else {
+            studentProjectsHtml = `<div class="muted" style="font-size:0.85rem">${t.no_projects}</div>`;
+          }
+        } catch(e) {
+          studentProjectsHtml = '<div class="muted" style="font-size:0.85rem">Error loading projects.</div>';
+        }
+
         if (prof) {
           content.innerHTML = `
             <div class="info-group"><div class="info-label">Email</div><div class="info-val">${email}</div></div>
-            <div class="info-group"><div class="info-label">Университет</div><div class="info-val">${prof.university || '—'}</div></div>
-            <div class="info-group"><div class="info-label">Мамандығы</div><div class="info-val">${prof.major || '—'}</div></div>
-            <div class="info-group"><div class="info-label">Дағдылары</div><div class="info-val">${prof.skills || '—'}</div></div>
+            <div class="info-group"><div class="info-label">${t.university}</div><div class="info-val">${prof.university || 'IITU'}</div></div>
+            <div class="info-group"><div class="info-label">${t.major}</div><div class="info-val">${prof.major || 'Information Technology'}</div></div>
+            <div class="info-group"><div class="info-label">${t.skills}</div><div class="info-val">${prof.skills || 'Java, Spring Boot, MySQL'}</div></div>
             <div class="info-group">
-                <div class="info-label">Сілтемелер</div>
+                <div class="info-label">${t.links}</div>
                 <div class="info-val" style="margin-top:4px">
                     ${prof.githubUrl ? `<a href="${prof.githubUrl}" target="_blank" style="margin-right:12px">🔗 GitHub Profile</a>` : ''}
                     ${prof.leetcodeUrl ? `<a href="${prof.leetcodeUrl}" target="_blank" style="margin-right:12px">🧩 LeetCode</a>` : ''}
                     ${prof.codeforcesUrl ? `<a href="${prof.codeforcesUrl}" target="_blank">🏆 Codeforces</a>` : ''}
                 </div>
             </div>
-            <div class="info-group" style="margin-top:12px"><div class="info-label">Bio</div><div class="info-val" style="font-style:italic">"${prof.bio || 'Ақпарат көрсетілмеген.'}"</div></div>
+            <div class="info-group" style="margin-top:12px"><div class="info-label">${t.bio}</div><div class="info-val" style="font-style:italic">"${prof.bio || 'Backend Developer'}"</div></div>
+            <hr style="border:none; border-top:1px solid #e2e8f0; margin:16px 0;">
+            <div class="info-group">
+                <div class="info-label">${t.active_projects_title}</div>
+                <div style="margin-top:6px">${studentProjectsHtml}</div>
+            </div>
           `;
         } else {
-          content.innerHTML = `<div class="info-group"><div class="info-label">Email</div><div class="info-val">${email}</div></div><div class="info-group"><div class="info-label">Мәртебе</div><div class="info-val text-muted">Студент профилін әлі сақтамаған.</div></div>`;
+          content.innerHTML = `
+            <div class="info-group"><div class="info-label">Email</div><div class="info-val">${email}</div></div>
+            <div class="info-group"><div class="info-label">Status</div><div class="info-val text-muted">${t.student_no_profile}</div></div>
+            <hr style="border:none; border-top:1px solid #e2e8f0; margin:16px 0;">
+            <div class="info-group">
+                <div class="info-label">${t.active_projects_title}</div>
+                <div style="margin-top:6px">${studentProjectsHtml}</div>
+            </div>
+          `;
         }
       } catch(e) {
-        content.innerHTML = `<div class="info-group"><div class="info-label">Email</div><div class="info-val">${email}</div></div><div class="info-group"><div class="info-label">Профиль</div><div class="info-val text-muted">Студент деректері табылмады.</div></div>`;
+        content.innerHTML = `<div class="info-group"><div class="info-label">Email</div><div class="info-val">${email}</div></div>`;
       }
     }
 
@@ -325,19 +534,40 @@
       document.getElementById("profileModal").style.display = "none";
     }
 
+    async function deleteProject(projectId) {
+      if (!confirm("Шынымен өшіргіңіз келе ме / Really delete?")) return;
+      try {
+        await apiFetch(`/api/v1/projects/${projectId}`, { method: 'DELETE' });
+        showSuccess(alertEl, "Өшірілді / Deleted!");
+        allProjects = await apiFetch("/api/v1/projects");
+        render();
+      } catch (err) {
+        showError(alertEl, err.message);
+      }
+    }
+
+    async function changeAppStatus(appId, status) {
+      try {
+        await apiFetch(`/api/v1/projects/applications/${appId}/status?status=${status}`, { method: 'POST' });
+        allProjects = await apiFetch("/api/v1/projects");
+        render();
+      } catch (e) {
+        showError(alertEl, e.message);
+      }
+    }
+
     async function apply(projectId) {
-      const coverLetter = prompt("Хабарламаңыз / Таныстыруыңыз (қай универденсіз, дағдыларыңыз):") || "";
+      const coverLetter = prompt("Хабарламаңыз / Cover Letter:") || "";
       try {
         await apiFetch(`/api/v1/projects/${projectId}/apply`, {
           method: "POST",
           body: JSON.stringify({ coverLetter })
         });
         appliedIds.add(projectId);
-        showSuccess(alertEl, "Өтінім / Командаға сұраныс сәтті жіберілді!");
         allProjects = await apiFetch("/api/v1/projects");
         render();
       } catch (err) {
-        showError(alertEl, err.message || "Өтінім жіберу кезінде қате шықты");
+        showError(alertEl, err.message);
       }
     }
 
@@ -356,7 +586,6 @@
               description: document.getElementById("compProjDesc").value
             })
           });
-          showSuccess(alertEl, "Хабарландыру сәтті жарияланды!");
           document.getElementById("createCompanyProjectForm").reset();
           allProjects = await apiFetch("/api/v1/projects");
           render();
@@ -384,7 +613,6 @@
               description: desc
             })
           });
-          showSuccess(alertEl, "Команда / Жоба сәтті жарияланды!");
           document.getElementById("createPetProjectForm").reset();
           allProjects = await apiFetch("/api/v1/projects");
           render();
@@ -404,6 +632,7 @@
 
     (async () => {
       try {
+        applyTranslations(); // Алдымен тілді орнату
         allProjects = await apiFetch("/api/v1/projects");
         if (role === "STUDENT") {
           try {
@@ -413,9 +642,10 @@
         }
         render();
       } catch (err) {
-        showError(alertEl, err.message || "Жобаларды жүктеу кезінде қате шықты");
+        showError(alertEl, err.message);
       }
     })();
 </script>
+<script src="js/lang-switcher.js"></script>
 </body>
 </html>

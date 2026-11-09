@@ -124,4 +124,24 @@ public class ProjectController {
 
         return ResponseEntity.ok(acceptedProjects);
     }
+
+    // 10. Жобаны өшіру (Тек жоба авторына)
+    @DeleteMapping("/{projectId}")
+    public ResponseEntity<?> deleteProject(@PathVariable Long projectId, Authentication authentication) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Жоба табылмады!"));
+
+        User currentUser = (User) authentication.getPrincipal();
+
+        if (!project.getOwner().getId().equals(currentUser.getId())) {
+            return ResponseEntity.badRequest().body("Сізде бұл жобаны өшіруге рұқсат жоқ!");
+        }
+
+        List<ProjectApplication> apps = applicationRepository.findByProjectId(projectId);
+        applicationRepository.deleteAll(apps);
+
+        projectRepository.delete(project);
+
+        return ResponseEntity.ok("Жоба сәтті өшірілді!");
+    }
 }

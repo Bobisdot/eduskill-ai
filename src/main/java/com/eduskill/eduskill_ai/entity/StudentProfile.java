@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -44,4 +46,11 @@ public class StudentProfile {
 
     @Column(length = 500)
     private String bio;
+
+    // 🔥 Day Streak үшін жаңа өрістер (MySQL-ге сақталады)
+    @Column(name = "current_streak")
+    private Integer currentStreak = 0;
+
+    @Column(name = "last_active_date")
+    private LocalDate lastActiveDate;
 }
